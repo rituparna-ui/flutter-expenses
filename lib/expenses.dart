@@ -40,15 +40,58 @@ class _ExpensesState extends State<Expenses> {
 
   void _openAddExpenseModal() {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       builder: (ctx) {
-        return const NewExpense();
+        return NewExpense(
+          addExpense: _addExpense,
+        );
       },
+    );
+  }
+
+  void _addExpense(Expense expense) {
+    setState(() {
+      expenses.add(expense);
+    });
+  }
+
+  void removeExpense(Expense expense) {
+    final expenseIndex = expenses.indexOf(expense);
+
+    setState(() {
+      expenses.remove(expense);
+    });
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Expense Removed'),
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Undo !',
+          onPressed: () {
+            setState(() {
+              expenses.insert(expenseIndex, expense);
+            });
+          },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget mainContent = const Center(
+      child: Text('No expenses found!'),
+    );
+
+    if (expenses.isNotEmpty) {
+      mainContent = ExpensesList(
+        expenses: expenses,
+        removeExpense: removeExpense,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter Expenses'),
@@ -63,7 +106,7 @@ class _ExpensesState extends State<Expenses> {
         children: [
           const Text("The Chart ..."),
           Expanded(
-            child: ExpensesList(expenses: expenses),
+            child: mainContent,
           ),
         ],
       ),

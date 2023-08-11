@@ -2,7 +2,9 @@ import 'package:expense_tracker/models/expense.dart';
 import 'package:flutter/material.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.addExpense});
+
+  final void Function(Expense expense) addExpense;
 
   @override
   State<NewExpense> createState() => _NewExpenseState();
@@ -33,6 +35,41 @@ class _NewExpenseState extends State<NewExpense> {
     _titleController.dispose();
     _amountController.dispose();
     super.dispose();
+  }
+
+  void _saveExpense() {
+    final enteredAmount = double.tryParse(_amountController.text);
+    final isAmountInvalid = enteredAmount == null || enteredAmount <= 0;
+
+    if (_titleController.text.isEmpty ||
+        isAmountInvalid ||
+        _selectedDate == null) {
+      showDialog(
+          context: context,
+          builder: (ctx) {
+            return AlertDialog(
+              title: const Text('Invalid Input'),
+              content: const Text('Please enter valid inputs'),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('OK!'))
+              ],
+            );
+          });
+      return;
+    }
+    widget.addExpense(
+      Expense(
+        category: _selectedCategory,
+        title: _titleController.text,
+        amount: enteredAmount,
+        date: _selectedDate!,
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -107,12 +144,7 @@ class _NewExpenseState extends State<NewExpense> {
                 child: const Text('Cancel'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  print("title ${_titleController.text}");
-                  print("amount ${_amountController.text}");
-                  print("Date $_selectedDate");
-                  print("cat $_selectedCategory");
-                },
+                onPressed: _saveExpense,
                 child: const Text('Save'),
               ),
             ],
